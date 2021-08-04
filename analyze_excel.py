@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 import xlrd
 
-# Hard-coded locations for convenience
-# sum_tbl_loc = "C:\\Users\\jordan.page\\Downloads\\Summary Table.xls"
-# experiment_folder_path = "C:\\Users\\jordan.page\\Documents\\Geo Stuff\\Second\\"
+# *** Hard-coded locations for convenience ***
+sum_tbl_loc = "C:\\Users\\jordan.page\\Downloads\\Summary Table.xls"
+experiment_folder_path = "C:\\Users\\jordan.page\\Documents\\Geo Stuff\\Second\\"
 
 
 def analyze_excel() -> None:
@@ -19,11 +19,25 @@ def analyze_excel() -> None:
     * I.e., make sure the Permeability (cm/sec @ 20C) column doesn't have those "-", and the
       LAB ID column doesn't have the "Type Lab ID here Cell A6" comment in it.
     """
+    try:
+        global sum_tbl_loc
+        sum_tbl_loc += ''
+    except NameError:
+        sum_tbl_loc = None
+    try:
+        global experiment_folder_path
+        experiment_folder_path += ''
+    except NameError:
+        experiment_folder_path = None
+
     Tk().withdraw()
-    sum_tbl_loc = askopenfilename(title="Select the Summary Table")
-    experiment_folder_path = askdirectory(title="Select the Folder containing the Experiments") + '/'
+    if sum_tbl_loc is None:
+        sum_tbl_loc = askopenfilename(title="Select the Summary Table")
+    if experiment_folder_path is None:
+        experiment_folder_path = askdirectory(title="Select the Folder containing the Experiments") + '/'
+
     if sum_tbl_loc is None or experiment_folder_path == '/':
-        logging.debug('Either the Summary Table or Experiment Folder was not selected.')
+        logging.info('Either the Summary Table or Experiment Folder was not selected.')
         exit(1)
 
     logging.debug(f'Using Summary Table at: {sum_tbl_loc}')
@@ -38,11 +52,13 @@ def analyze_excel() -> None:
     types = [' '.join(i.split('-')[-1].split(' ')[1:]).split('.')[0] for i in files]
     individual_nums = np.unique(only_nums)
     num_ids = len(individual_nums)
+
     logging.debug(f'Individual IDs: {individual_nums}')
     logging.debug(f'Number of individual IDs: {num_ids}')
+    logging.debug(f'Number of Experiment files found: {len(files)}')
 
     info_dict = {}
-    logging.debug('Generating NA dict...')
+    logging.info('Generating NA dict...')
     for i, v in enumerate(only_nums):
         info_dict[v] = info_dict.get(v, {'Data': {'Boring': 'NA', 'Depth': 'NA', 'Sample Number': 'NA',
                                                   'Water Content %': 'NA', 'Liquid Limit %': 'NA',
@@ -59,7 +75,7 @@ def analyze_excel() -> None:
 
     sum_tbl = pd.read_excel(sum_tbl_loc, skiprows=4, nrows=num_ids)
 
-    logging.debug('Reading Excel files...')
+    logging.info('Reading Excel files...')
     for lab_id in info_dict.keys():
         for experiment in info_dict.get(lab_id).get('Experiments'):
             experiment_type = experiment.get('Experiment Type')
@@ -120,7 +136,7 @@ def analyze_excel() -> None:
             else:
                 logging.debug(f'Unrecognized experiment type: {experiment_type}')
 
-    logging.debug('Grabbing all Data lists...')
+    logging.info('Grabbing all Data lists...')
     all_lab_ids = [project_num + '-' + str(i).zfill(3) for i in individual_nums]
     all_borings = [v['Data']['Boring'] for k, v in info_dict.items()]
     all_depths = [v['Data']['Depth'] for k, v in info_dict.items()]
@@ -139,7 +155,7 @@ def analyze_excel() -> None:
     all_average_specific_gravities = [v['Data']['Average Specific Gravity'] for k, v in info_dict.items()]
     all_permeabilities = [v['Data']['Permeability (cm/sec @ 20C)'] for k, v in info_dict.items()]
 
-    logging.debug('Vectorizing the Data lists into the Summary Table...')
+    logging.info('Vectorizing the Data lists into the Summary Table...')
     sum_tbl['LAB ID'] = all_lab_ids
     sum_tbl['Boring'] = all_borings
     sum_tbl['Depth'] = all_depths
@@ -161,15 +177,15 @@ def analyze_excel() -> None:
     output_file_name = 'Summary Table ' + project_num + '.xlsx'
 
     try:
-        logging.debug(f'Outputting Summary Table to file: {output_file_name}')
+        logging.info(f'Outputting Summary Table to file: {output_file_name}')
         sum_tbl.to_excel(output_file_name, sheet_name='Summary Table', index=False)
         logging.debug(f'Info dict: {info_dict}')
     except PermissionError:
-        logging.debug(f'You need to close {output_file_name}, then run this utility again.')
+        logging.info(f'You need to close {output_file_name}, then run this utility again.')
 
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='../Geo Stuff.log', encoding='utf-8', level=logging.DEBUG,
+    logging.basicConfig(filename='../Geo.log', encoding='utf-8', level=logging.DEBUG,
                         format='%(asctime)s | %(levelname)s | %(message)s',
                         datefmt='%m/%d/%Y %I:%M:%S %p')
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
