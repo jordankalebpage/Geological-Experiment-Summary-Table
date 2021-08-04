@@ -1,13 +1,13 @@
 from setuptools import setup
 
 setup(
-    name='MessingAround',
+    name='Geological Experiment Script',
     version='1.0.0',
-    packages=['Excel Experiment Script'],
+    packages=[],
     url='',
     license='MIT',
     author='Jordan Page',
     author_email='',
-    description='Some thing',
+    description='Script to output a Summary Table of data from Geological Experiments',
     install_requires=["numpy", "pandas", "xlrd"]
 )
