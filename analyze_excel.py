@@ -9,8 +9,8 @@ import pandas as pd
 import xlrd
 
 # *** Hard-coded locations for convenience ***
-sum_tbl_loc = "C:\\Users\\jordan.page\\Downloads\\Summary Table.xls"
-experiment_folder_path = "C:\\Users\\jordan.page\\Documents\\Geo Stuff\\Second\\"
+# sum_tbl_loc = "C:\\Users\\jordan.page\\Downloads\\Summary Table.xls"
+# experiment_folder_path = "C:\\Users\\jordan.page\\Documents\\Geo Stuff\\Second\\"
 
 
 def analyze_excel() -> None:
@@ -75,6 +75,14 @@ def analyze_excel() -> None:
 
     sum_tbl = pd.read_excel(sum_tbl_loc, skiprows=4, nrows=num_ids)
 
+    # 0-based index locations of all of the Experiment Data values -> (row, column)
+    cell_values = {'Boring': (3, 7), 'Depth': (4, 7), 'Sample Number': (5, 7), 'Passing #200 %': (44, 5),
+                   'Passing 0.002 mm %': (106, 1), 'USCS Symbol (Grain Size)': (49, 0),
+                   'USCS Classification': (52, 0), 'Water Content %': (21, 3), 'Liquid Limit %': (26, 9),
+                   'Plastic Limit %': (28, 9), 'Plasticity Index %': (30, 9), 'USCS Symbol (Limits)': (32, 9),
+                   'Standard Proctor OMC %': (13, 6), 'Standard Proctor MDD (pcf)': (14, 6),
+                   'Average Specific Gravity': (36, 8), 'Permeability (cm/sec @ 20C)': (12, 15)}
+
     logging.info('Reading Excel files...')
     for lab_id in info_dict.keys():
         for experiment in info_dict.get(lab_id).get('Experiments'):
@@ -82,9 +90,6 @@ def analyze_excel() -> None:
             file_location = experiment.get('File Location')
 
             if 'Grain Sieve' in experiment_type:
-                cell_values = {'Boring': (3, 7), 'Depth': (4, 7), 'Sample Number': (5, 7), 'Passing #200 %': (44, 5),
-                               'Passing 0.002 mm %': (106, 1), 'USCS Symbol (Grain Size)': (49, 0),
-                               'USCS Classification': (52, 0)}
                 sheet = xlrd.open_workbook_xls(file_location).sheet_by_name("Sieve Hyd")
 
                 info_dict[lab_id]['Data']['Boring'] = sheet.cell(*cell_values.get('Boring')).value
@@ -99,9 +104,6 @@ def analyze_excel() -> None:
                 info_dict[lab_id]['Data']['USCS Classification'] = sheet.cell(
                     *cell_values.get('USCS Classification')).value
             elif 'Limit' in experiment_type or 'limit' in experiment_type:
-                cell_values = {'Water Content %': (21, 3), 'Liquid Limit %': (26, 9), 'Plastic Limit %': (28, 9),
-                               'Plasticity Index %': (30, 9),
-                               'USCS Symbol (Limits)': (32, 9)}
                 sheet = xlrd.open_workbook_xls(file_location).sheet_by_name("Sheet1")
 
                 info_dict[lab_id]['Data']['Water Content %'] = round(
@@ -114,7 +116,6 @@ def analyze_excel() -> None:
                 info_dict[lab_id]['Data']['USCS Symbol (Limits)'] = sheet.cell(
                     *cell_values.get('USCS Symbol (Limits)')).value
             elif 'Proctor Std' in experiment_type:
-                cell_values = {'Standard Proctor OMC %': (13, 6), 'Standard Proctor MDD (pcf)': (14, 6)}
                 sheet = xlrd.open_workbook_xls(file_location).sheet_by_name("Sheet1")
 
                 info_dict[lab_id]['Data']['Standard Proctor OMC %'] = round(
@@ -122,7 +123,6 @@ def analyze_excel() -> None:
                 info_dict[lab_id]['Data']['Standard Proctor MDD (pcf)'] = round(
                     float(sheet.cell(*cell_values.get('Standard Proctor MDD (pcf)')).value), 1)
             elif 'Specific Gravity' in experiment_type:
-                cell_values = {'Average Specific Gravity': (36, 8)}
                 sheet = xlrd.open_workbook_xls(file_location).sheet_by_name("Sheet1")
 
                 info_dict[lab_id]['Data']['Average Specific Gravity'] = round(
@@ -185,7 +185,7 @@ def analyze_excel() -> None:
 
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='../Geo.log', encoding='utf-8', level=logging.DEBUG,
+    logging.basicConfig(filename='./Geo.log', encoding='utf-8', level=logging.DEBUG,
                         format='%(asctime)s | %(levelname)s | %(message)s',
                         datefmt='%m/%d/%Y %I:%M:%S %p')
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
